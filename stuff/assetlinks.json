@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.intron014.gp.twa",
+      "sha256_cert_fingerprints":
+        ["41:64:BF:54:C1:8F:D7:D4:99:42:6D:A6:09:0E:E6:65:EC:2A:AB:4B:1C:38:76:B9:EF:BB:34:F6:9F:51:82:E3"]
+    }
+  }
+]

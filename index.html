@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GasoPrice">
+    <title>GasoPrice</title>
+
+    <!-- tags -->
+    <meta name="description" content="Find the cheapest gas stations in Spain">
+    <meta name="keywords" content="gas, fuel, stations, spain, cheapest">
+    <meta name="author" content="Jorge Benjumea">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-startup-image" href="icons/gasologo.jpg">
+    <script src="scripts.js"></script>
+    <link rel="icon" type="image/png" href="icons/gasologo.jpg">
+    <link rel="manifest" href="stuff/manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("/stuff/sw.js").then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>GasoPrice</h1>
+        <p>Find the cheapest gas stations in Spain</p>
+
+        <div class="control-panel">
+            <button onclick="toggleSearchMenu()" id="toggle-search-menu">Toggle Search Menu</button>
+            <button onclick="darkModeToggle()" id="dark-mode-toggle">DM</button>
+            <button onclick="toggleColumnMenu()" id="toggle-column-menu">Settings</button>
+            <button onclick="toggleBrandFilterMenu()" id="toggle-brand-filter">Settings</button>
+            <select id="language-selector">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="ca">Català</option>
+            </select>
+        </div>
+
+        <div id="search-menu" class="search-menu" style="display: none;">
+            <form id="search-form" onsubmit="searchStations(event)">
+                <div class="filter-group">
+                    <label for="distance-input">Filter by Distance (km):</label>
+                    <input type="number" id="distance-input" name="distance" min="0" step="0.1" value="4">
+                    <input type="range" id="distance-range" min="0" max="100" step="0.1" value="4" oninput="syncDistanceInputs()">
+                    <button type="button" id="filter-by-distance">Filter</button>
+                </div>
+                <div class="filter-group">
+                    <label for="provincia-select">Select Provincia:</label>
+                    <select id="provincia-select" name="provincia">
+                        <option value="">Select Provincia</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="municipio-select">Select Municipio:</label>
+                    <select id="municipio-select" name="municipio">
+                        <option value="">Select Municipio</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button id="search-button" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+        <div id="column-menu" class="column-menu" style="display: none;"></div>
+        <div id="brand-menu" class="brand-menu" style="display: none;"></div>
+
+        <div id="loading-spinner" class="spinner-container" style="display: none;">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading gas stations...</p>
+        </div>
+
+        <table id="stations-table">
+            <thead id="stations-table-head"></thead>
+            <tbody id="stations-table-body"></tbody>
+        </table>
+        <div id="pagination-controls" class="pagination"></div>
+    </div>
+</body>
+</html>

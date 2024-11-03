@@ -1,0 +1,243 @@
+{
+  "title": {
+    "en": "GasoPrice",
+    "es": "GasoPrice",
+    "ca": "GasoPrice"
+  },
+  "subtitle": {
+    "en": "Find the cheapest gas stations in Spain",
+    "es": "Encuentra las gasolineras más baratas en España",
+    "ca": "Troba les gasolineres més barates a Espanya"
+  },
+  "settings": {
+    "en": "Settings",
+    "es": "Ajustes",
+    "ca": "Configuració"
+  },
+  "brandFilter": {
+    "en": "Brand Filter",
+    "es": "Filtrar por Marca",
+    "ca": "Filtrar per Marca"
+  },
+  "distancePlaceholder": {
+    "en": "Distance (km)",
+    "es": "Distancia (km)",
+    "ca": "Distància (km)"
+  },
+  "filter": {
+    "en": "Filter",
+    "es": "Filtrar",
+    "ca": "Filtrar"
+  },
+  "selectProvincia": {
+    "en": "Select Provincia",
+    "es": "Seleccionar Provincia",
+    "ca": "Seleccionar Província"
+  },
+  "selectMunicipio": {
+    "en": "Select Municipio",
+    "es": "Seleccionar Municipio",
+    "ca": "Seleccionar Municipi"
+  },
+  "search": {
+    "en": "Search",
+    "es": "Buscar",
+    "ca": "Cercar"
+  },
+  "loadingStations": {
+    "en": "Loading gas stations...",
+    "es": "Cargando gasolineras...",
+    "ca": "Carregant gasolineres..."
+  },
+  "latestUpdate": {
+    "en": "Latest update:",
+    "es": "Última actualización:",
+    "ca": "Última actualització:"
+  },
+  "C.P.": {
+    "en": "P.C.",
+    "es": "C.P.",
+    "ca": "C.P."
+  },
+  "Dirección": {
+    "en": "Address",
+    "es": "Dirección",
+    "ca": "Adreça"
+  },
+  "Distancia": {
+    "en": "Distance",
+    "es": "Distancia",
+    "ca": "Distància"
+  },
+  "Horario": {
+    "en": "Schedule",
+    "es": "Horario",
+    "ca": "Horari"
+  },
+  "schedule": {
+    "en": "Schedule",
+    "es": "Horario",
+    "ca": "Horari"
+  },
+  "Latitud": {
+    "en": "Latitude",
+    "es": "Latitud",
+    "ca": "Latitud"
+  },
+  "Longitud (WGS84)": {
+    "en": "Longitude",
+    "es": "Longitud",
+    "ca": "Longitud"
+  },
+  "Localidad": {
+    "en": "Locality",
+    "es": "Localidad",
+    "ca": "Localitat"
+  },
+  "Margen": {
+    "en": "Margin",
+    "es": "Margen",
+    "ca": "Marge"
+  },
+  "Municipio": {
+    "en": "Municipality",
+    "es": "Municipio",
+    "ca": "Municipi"
+  },
+  "Gasoleo A": {
+    "en": "Diesel A",
+    "es": "Gasóleo A",
+    "ca": "Gasoli A"
+  },
+  "Gasoleo A +": {
+    "en": "Diesel Premium",
+    "es": "Gasóleo Premium",
+    "ca": "Gasoli Premium"
+  },
+  "Sin Plomo 95": {
+    "en": "Gasoline 95",
+    "es": "Gasolina 95",
+    "ca": "Gasolina 95"
+  },
+  "Sin Plomo 98": {
+    "en": "Gasoline 98",
+    "es": "Gasolina 98",
+    "ca": "Gasolina 98"
+  },
+  "Biodiesel": {
+    "en": "Biodiesel",
+    "es": "Biodiesel",
+    "ca": "Biodièsel"
+  },
+  "Bioetanol": {
+    "en": "Bioethanol",
+    "es": "Bioetanol",
+    "ca": "Bioetanol"
+  },
+  "GNC": {
+    "en": "CNG",
+    "es": "GNC",
+    "ca": "GNC"
+  },
+  "GNL": {
+    "en": "LNG",
+    "es": "GNL",
+    "ca": "GNL"
+  },
+  "GLP": {
+    "en": "LPG",
+    "es": "GLP",
+    "ca": "GLP"
+  },
+  "H2": {
+    "en": "Hydrogen",
+    "es": "Hidrógeno",
+    "ca": "Hidrogen"
+  },
+  "Provincia": {
+    "en": "Province",
+    "es": "Provincia",
+    "ca": "Província"
+  },
+  "Remission": {
+    "en": "Remission",
+    "es": "Remisión",
+    "ca": "Remissió"
+  },
+  "Marca": {
+    "en": "Brand",
+    "es": "Marca",
+    "ca": "Marca"
+  },
+  "TV": {
+    "en": "Sale Type",
+    "es": "Tipo de Venta",
+    "ca": "Tipus de Venda"
+  },
+  "open": {
+    "en": "OPEN",
+    "es": "ABIERTO",
+    "ca": "OBERT"
+  },
+  "closed": {
+    "en": "CLOSED",
+    "es": "CERRADO",
+    "ca": "TANCAT"
+  },
+  "open247": {
+    "en": "24/7",
+    "es": "24/7",
+    "ca": "24/7"
+  },
+  "mapEmbeds": {
+    "en": "Map Embeds",
+    "es": "Mapas",
+    "ca": "Mapes"
+  },
+  "openStations": {
+    "en": "Show only open stations",
+    "es": "Mostrar solo gasolineras abiertas",
+    "ca": "Mostrar només gasolineres obertes"
+  },
+  "columns": {
+    "en": "Columns",
+    "es": "Columnas",
+    "ca": "Columnes"
+  },
+  "darkMode": {
+    "en": "Dark Mode",
+    "es": "Modo Oscuro",
+    "ca": "Mode Fosc"
+  },
+  "lightMode": {
+    "en": "Light Mode",
+    "es": "Modo Claro",
+    "ca": "Mode Clar"
+  },
+  "selectAll": {
+    "en": "Select All",
+    "es": "Seleccionar Todo",
+    "ca": "Seleccionar Tot"
+  },
+  "deselectAll": {
+    "en": "Deselect All",
+    "es": "Deseleccionar Todo",
+    "ca": "Deseleccionar Tot"
+  },
+  "loading1": {
+    "en": "Fueling up our database...",
+    "es": "Repostando la base de datos...",
+    "ca": "Repostant la base de dades..."
+  },
+  "loading2": {
+    "en": "Pumping data from the servers...",
+    "es": "Extrayendo datos de los servidores...",
+    "ca": "Extreient dades dels servidors..."
+  },
+  "loading3": {
+    "en": "Filling up the tank...",
+    "es": "Llenando el depósito...",
+    "ca": "Omplint el dipòsit..."
+  }
+
+}
