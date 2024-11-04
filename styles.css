@@ -349,8 +349,6 @@ select:hover {
     content: " ▼";
 }
 
-.sorted {
-}
 
 .spinner-container {
     display: flex;
