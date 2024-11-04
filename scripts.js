@@ -1029,3 +1029,12 @@ window.onload = async function() {
     updateLanguage();
     await filterStationsByDistance(4);
 };
+document.addEventListener('DOMContentLoaded', () => {
+    const storedLanguage = localStorage.getItem('selectedLanguage');
+    if (storedLanguage) {
+        currentLanguage = storedLanguage;
+    }
+
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.body.classList.toggle('dark-mode', isDarkMode);
+});

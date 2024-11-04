@@ -19,6 +19,17 @@
     <link rel="icon" type="image/png" href="icons/gasologo.jpg">
     <link rel="manifest" href="stuff/manifest.json">
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedLanguage = localStorage.getItem('selectedLanguage');
+            if (storedLanguage) {
+                document.documentElement.lang = storedLanguage;
+            }
+
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            document.body.classList.toggle('dark-mode', isDarkMode);
+        });
+    </script>
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register("/stuff/sw.js").then(function(registration) {
