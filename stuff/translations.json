@@ -238,6 +238,21 @@
     "en": "Filling up the tank...",
     "es": "Llenando el depósito...",
     "ca": "Omplint el dipòsit..."
+  },
+  "maintenanceTitle": {
+    "en": "Service Temporarily Unavailable",
+    "es": "Servicio Temporalmente No Disponible",
+    "ca": "Servei Temporalment No Disponible"
+  },
+  "maintenanceMessage": {
+    "en": "We are currently performing maintenance on our servers. Please check back later.",
+    "es": "Actualmente estamos realizando mantenimiento en nuestros servidores. Por favor, vuelve más tarde.",
+    "ca": "Actualment estem realitzant manteniment als nostres servidors. Si us plau, torna més tard."
+  },
+  "retryButton": {
+    "en": "Retry",
+    "es": "Reintentar",
+    "ca": "Tornar a provar"
   }
 
 }

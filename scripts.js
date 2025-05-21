@@ -474,7 +474,20 @@ async function fetchStations() {
         if (useMock) {
             console.log('Using mock data');
         }
+        
         const response = await fetch(fetchUrl);
+        
+        // Check for maintenance redirect in the response URL
+        if (response.url && response.url.includes('enmantenimiento')) {
+            hideSpinner();
+            showMaintenanceMessage();
+            return [];
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         allStations = data.ListaEESSPrecio;
         hideSpinner();
@@ -482,9 +495,50 @@ async function fetchStations() {
     } catch (error) {
         console.error('Error fetching stations:', error);
         hideSpinner();
+        
+        // Try to check if it's a maintenance issue
+        try {
+            const maintenanceCheck = await fetch(fetchUrl);
+            if (maintenanceCheck.url && maintenanceCheck.url.includes('enmantenimiento')) {
+                showMaintenanceMessage();
+                return [];
+            }
+        } catch (e) {
+            console.error('Error checking maintenance status:', e);
+        }
+        
         alert('Error loading gas stations. Please try again later.');
         return [];
     }
+}
+
+function showMaintenanceMessage() {
+    const container = document.querySelector('.container');
+    container.innerHTML = '';
+    
+    const maintenanceDiv = document.createElement('div');
+    maintenanceDiv.className = 'maintenance-message';
+    
+    const icon = document.createElement('div');
+    icon.className = 'maintenance-icon';
+    icon.innerHTML = '🛠️';
+    
+    const heading = document.createElement('h1');
+    heading.textContent = translate('maintenanceTitle');
+    
+    const message = document.createElement('p');
+    message.textContent = translate('maintenanceMessage');
+    
+    const retryButton = document.createElement('button');
+    retryButton.textContent = translate('retryButton');
+    retryButton.addEventListener('click', () => window.location.reload());
+    
+    // Append elements
+    maintenanceDiv.appendChild(icon);
+    maintenanceDiv.appendChild(heading);
+    maintenanceDiv.appendChild(message);
+    maintenanceDiv.appendChild(retryButton);
+    container.appendChild(maintenanceDiv);
 }
 
 function displayStations(stations) {
@@ -509,7 +563,6 @@ function displayStations(stations) {
     tableHead.innerHTML = '';
     tableBody.innerHTML = '';
 
-    // Create table header
     const headerRow = document.createElement('tr');
     visibleColumns.forEach(columnKey => {
         const column = columns.find(col => col.key === columnKey);
