@@ -513,6 +513,7 @@ async function fetchStations() {
 }
 
 function showMaintenanceMessage() {
+    console.log('Showing maintenance message');
     const container = document.querySelector('.container');
     container.innerHTML = '';
     
