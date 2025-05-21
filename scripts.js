@@ -496,15 +496,14 @@ async function fetchStations() {
         console.error('Error fetching stations:', error);
         hideSpinner();
         
-        // Try to check if it's a maintenance issue
-        try {
-            const maintenanceCheck = await fetch(fetchUrl);
-            if (maintenanceCheck.url && maintenanceCheck.url.includes('enmantenimiento')) {
-                showMaintenanceMessage();
-                return [];
-            }
-        } catch (e) {
-            console.error('Error checking maintenance status:', e);
+        if (error.message && (
+            error.message.includes('NetworkError') || 
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('404')
+        )) {
+            console.log('Service appears to be in maintenance mode or unreachable');
+            showMaintenanceMessage();
+            return [];
         }
         
         alert('Error loading gas stations. Please try again later.');
