@@ -521,7 +521,7 @@ function showMaintenanceMessage() {
     
     const icon = document.createElement('div');
     icon.className = 'maintenance-icon';
-    icon.innerHTML = '🛠️';
+    icon.innerHTML = '⛽';
     
     const heading = document.createElement('h1');
     heading.textContent = translate('maintenanceTitle');
