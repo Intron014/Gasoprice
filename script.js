@@ -45,9 +45,18 @@ class GasStationApp {
             'gasoleo': 'Precio Gasoleo A',
             'gasolina98': 'Precio Gasolina 98 E5',
             'gasoleoB': 'Precio Gasoleo B',
+            'gasolina95Premium': 'Precio Gasolina 95 E5 Premium',
+            'gasoleoPremium': 'Precio Gasoleo Premium',
+            'gasolina95E10': 'Precio Gasolina 95 E10',
+            'gasolina98E10': 'Precio Gasolina 98 E10',
             'glp': 'Precio Gases licuados del petróleo',
             'gnc': 'Precio Gas Natural Comprimido',
-            'adblue': 'Precio Adblue'
+            'gnl': 'Precio Gas Natural Licuado',
+            'adblue': 'Precio Adblue',
+            'biodiesel': 'Precio Biodiesel',
+            'bioetanol': 'Precio Bioetanol',
+            'hidrogeno': 'Precio Hidrogeno',
+            'gasolinaRenovable': 'Precio Gasolina Renovable'
         };
         
         this.initializeElements();
@@ -265,9 +274,18 @@ class GasStationApp {
                     'gasoleo': 'Gasóleo A',
                     'gasolina98': 'Gasolina 98 E5',
                     'gasoleoB': 'Gasóleo B',
+                    'gasolina95Premium': 'Gasolina 95 E5 Premium',
+                    'gasoleoPremium': 'Gasóleo Premium',
+                    'gasolina95E10': 'Gasolina 95 E10',
+                    'gasolina98E10': 'Gasolina 98 E10',
                     'glp': 'GLP',
                     'gnc': 'GNC',
-                    'adblue': 'AdBlue'
+                    'gnl': 'GNL',
+                    'adblue': 'AdBlue',
+                    'biodiesel': 'Biodiesel',
+                    'bioetanol': 'Bioetanol',
+                    'hidrogeno': 'Hidrógeno',
+                    'gasolinaRenovable': 'Gasolina Renovable'
                 };
                 return `<th>${labels[fuel]}</th>`;
             }).join('')}
