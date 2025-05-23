@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precios de Gasolineras en España</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gasoprice</h1>
+            <p>Encuentra las gasolineras más baratas en España</p>
+            <p id="last-update">Última actualización: --</p>
+        </header>
+
+        <div class="controls">
+            <select id="province-filter" class="form-select">
+                <option value="">Todas las provincias</option>
+            </select>
+            <button id="settings-btn" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                ⚙️ Filtros
+            </button>
+            <button id="refresh-btn" class="btn btn-primary">🔄 Actualizar</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal fade" id="settingsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Filtros de Combustible</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">Selecciona qué tipos de combustible mostrar en la tabla:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="gasolina95" id="fuel-gasolina95" checked>
+                                    <label class="form-check-label" for="fuel-gasolina95">Gasolina 95 E5</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="gasoleo" id="fuel-gasoleo" checked>
+                                    <label class="form-check-label" for="fuel-gasoleo">Gasóleo A</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="gasolina98" id="fuel-gasolina98">
+                                    <label class="form-check-label" for="fuel-gasolina98">Gasolina 98 E5</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="gasoleoB" id="fuel-gasoleoB">
+                                    <label class="form-check-label" for="fuel-gasoleoB">Gasóleo B</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="glp" id="fuel-glp">
+                                    <label class="form-check-label" for="fuel-glp">GLP</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="gnc" id="fuel-gnc">
+                                    <label class="form-check-label" for="fuel-gnc">Gas Natural Comprimido</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input fuel-filter" type="checkbox" value="adblue" id="fuel-adblue">
+                                    <label class="form-check-label" for="fuel-adblue">AdBlue</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="apply-filters">Aplicar Filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando datos de gasolineras...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>Error al cargar los datos. Por favor, inténtalo de nuevo.</p>
+        </div>
+
+        <div class="table-container">
+            <table id="gas-stations-table" class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Localidad</th>
+                        <th>Provincia</th>
+                        <th>Dirección</th>
+                        <th>Rótulo</th>
+                        <th class="fuel-column fuel-gasolina95">Gasolina 95 E5</th>
+                        <th class="fuel-column fuel-gasoleo">Gasóleo A</th>
+                        <th class="fuel-column fuel-gasolina98" style="display: none;">Gasolina 98 E5</th>
+                        <th class="fuel-column fuel-gasoleoB" style="display: none;">Gasóleo B</th>
+                        <th class="fuel-column fuel-glp" style="display: none;">GLP</th>
+                        <th class="fuel-column fuel-gnc" style="display: none;">GNC</th>
+                        <th class="fuel-column fuel-adblue" style="display: none;">AdBlue</th>
+                        <th>Horario</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="stats" class="stats">
+            <p>Total de estaciones: <span id="total-count">0</span></p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
