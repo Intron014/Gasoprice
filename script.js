@@ -91,16 +91,16 @@ class GasStationApp {
         this.applyFiltersBtn.addEventListener('click', () => {
             this.applyFuelFilters();
             this.requestCookieConsentIfNeeded();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+            if (modal) {
+                modal.hide();
+            }
         });
         
         this.darkModeToggle.addEventListener('click', () => {
             this.toggleDarkMode();
             this.requestCookieConsentIfNeeded();
-        });
-
-        this.applyFiltersBtn.addEventListener('click', () => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
-            modal.hide();
         });
         
         $(document).on('click', '.schedule-status', (e) => {
@@ -155,6 +155,8 @@ class GasStationApp {
         this.darkMode = !this.darkMode;
         document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
         this.darkModeToggle.textContent = this.darkMode ? '☀️' : '🌙';
+        
+        this.saveSettings();
     }
 
     loadSettings() {
@@ -275,6 +277,8 @@ class GasStationApp {
                 this.activeFuels.push(checkbox.value);
             }
         });
+        
+        this.saveSettings();
         
         this.updateColumnVisibility();
         this.populateDataTable();
