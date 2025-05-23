@@ -62,8 +62,8 @@ class GasStationApp {
         };
         
         this.initializeElements();
-        this.initializeCookieConsent();
         this.loadSettings();
+        this.initializeCookieConsent();
         this.attachEventListeners();
         this.requestUserLocation();
         // Initialize table header and DataTable after settings are loaded
@@ -111,7 +111,13 @@ class GasStationApp {
     }
 
     initializeCookieConsent() {
-        this.cookieConsentInstance = window.cookieconsent.initialise({
+        const existingConsent = localStorage.getItem('cookieconsent_status');
+        if (existingConsent === 'allow') {
+            this.cookieConsent = true;
+            return;
+        }
+
+        window.cookieconsent.initialise({
             palette: {
                 popup: {
                     background: "#1d8a8a"
@@ -124,18 +130,26 @@ class GasStationApp {
             position: "bottom-right",
             content: {
                 message: "Este sitio utiliza cookies para recordar tus preferencias de filtros y modo oscuro.",
-                dismiss: "Entendido",
+                dismiss: "Permitir cookies",
                 deny: "Rechazar",
                 allow: "Permitir cookies",
                 link: "Más información"
             },
             type: "opt-in",
             onStatusChange: (status) => {
+                console.log('Cookie consent status changed:', status);
                 this.cookieConsent = status === 'allow';
                 if (this.cookieConsent) {
                     this.saveSettings();
                 } else {
                     this.clearSettings();
+                }
+            },
+            onInitialise: (status) => {
+                console.log('Cookie consent initialized:', status);
+                this.cookieConsent = status === 'allow';
+                if (this.cookieConsent) {
+                    this.saveSettings();
                 }
             }
         });
@@ -144,7 +158,7 @@ class GasStationApp {
     requestCookieConsentIfNeeded() {
         const consentStatus = localStorage.getItem('cookieconsent_status');
         if (!consentStatus) {
-            this.initializeCookieConsent();
+            console.log('No cookie consent found, popup should be visible');
         } else if (consentStatus === 'allow') {
             this.cookieConsent = true;
             this.saveSettings();
@@ -161,18 +175,23 @@ class GasStationApp {
 
     loadSettings() {
         const consentStatus = localStorage.getItem('cookieconsent_status');
+        console.log('Loading settings, consent status:', consentStatus);
+        
         if (consentStatus === 'allow') {
             this.cookieConsent = true;
             
             // Load dark mode setting
             const savedDarkMode = localStorage.getItem('gasoprice_darkmode');
+            console.log('Saved dark mode:', savedDarkMode);
             if (savedDarkMode === 'true') {
                 this.darkMode = true;
                 document.documentElement.setAttribute('data-theme', 'dark');
                 this.darkModeToggle.textContent = '☀️';
             }
 
+            // Load fuel filter settings
             const savedFuels = localStorage.getItem('gasoprice_fuels');
+            console.log('Saved fuels:', savedFuels);
             if (savedFuels) {
                 try {
                     this.activeFuels = JSON.parse(savedFuels);
@@ -189,11 +208,21 @@ class GasStationApp {
 
     saveSettings() {
         const consentStatus = localStorage.getItem('cookieconsent_status');
-        if (consentStatus === 'allow') {
-            this.cookieConsent = true;
-            localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
-            localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
-            console.log('Settings saved:', { darkMode: this.darkMode, fuels: this.activeFuels });
+        console.log('Attempting to save settings, consent status:', consentStatus);
+        
+        if (consentStatus === 'allow' || this.cookieConsent) {
+            try {
+                localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
+                localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
+                console.log('Settings saved successfully:', { 
+                    darkMode: this.darkMode, 
+                    fuels: this.activeFuels 
+                });
+            } catch (e) {
+                console.error('Error saving settings:', e);
+            }
+        } else {
+            console.log('Cannot save settings: no cookie consent');
         }
     }
 
