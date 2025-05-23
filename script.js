@@ -66,6 +66,8 @@ class GasStationApp {
         this.loadSettings();
         this.attachEventListeners();
         this.requestUserLocation();
+        // Initialize table header and DataTable after settings are loaded
+        this.updateTableHeader();
         this.initializeDataTable();
         this.loadData();
     }
@@ -335,7 +337,12 @@ class GasStationApp {
         this.updateLastUpdate(data.Fecha);
         this.updateDataWithDistances();
         this.populateProvinceFilter();
-        this.updateColumnVisibility();
+        // Remove updateColumnVisibility from here since it's called in loadSettings if needed
+        if (!this.dataTable) {
+            this.updateColumnVisibility();
+        } else {
+            this.populateDataTable();
+        }
         this.updateStats();
         this.hideLoading();
     }
