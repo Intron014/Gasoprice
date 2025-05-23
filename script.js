@@ -111,6 +111,7 @@ class GasStationApp {
     }
 
     initializeCookieConsent() {
+        // Check if consent has already been given
         const existingConsent = localStorage.getItem('cookieconsent_status');
         if (existingConsent === 'allow') {
             this.cookieConsent = true;
@@ -139,16 +140,20 @@ class GasStationApp {
             onStatusChange: (status) => {
                 console.log('Cookie consent status changed:', status);
                 this.cookieConsent = status === 'allow';
+                
                 if (this.cookieConsent) {
+                    localStorage.setItem('cookieconsent_status', 'allow');
                     this.saveSettings();
                 } else {
+                    localStorage.setItem('cookieconsent_status', 'deny');
                     this.clearSettings();
                 }
             },
             onInitialise: (status) => {
-                console.log('Cookie consent initialized:', status);
+                console.log('Cookie consent initialized with status:', status);
                 this.cookieConsent = status === 'allow';
                 if (this.cookieConsent) {
+                    localStorage.setItem('cookieconsent_status', 'allow');
                     this.saveSettings();
                 }
             }
@@ -157,6 +162,8 @@ class GasStationApp {
 
     requestCookieConsentIfNeeded() {
         const consentStatus = localStorage.getItem('cookieconsent_status');
+        console.log('Checking cookie consent status:', consentStatus);
+        
         if (!consentStatus) {
             console.log('No cookie consent found, popup should be visible');
         } else if (consentStatus === 'allow') {
@@ -207,10 +214,8 @@ class GasStationApp {
     }
 
     saveSettings() {
-        const consentStatus = localStorage.getItem('cookieconsent_status');
-        console.log('Attempting to save settings, consent status:', consentStatus);
-        
-        if (consentStatus === 'allow' || this.cookieConsent) {
+        // Don't rely on localStorage check here, use the instance variable
+        if (this.cookieConsent) {
             try {
                 localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
                 localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
