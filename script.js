@@ -1,3 +1,37 @@
+$.fn.dataTable.ext.type.order['price-with-na-asc'] = function(a, b) {
+    const getPrice = (data) => {
+        if (typeof data === 'string') {
+            if (data.includes('N/A') || data.includes('unavailable')) {
+                return Number.MAX_VALUE;
+            }
+            const priceMatch = data.match(/>([\d,]+)€</);
+            if (priceMatch) {
+                return parseFloat(priceMatch[1].replace(',', '.'));
+            }
+        }
+        return Number.MAX_VALUE;
+    };
+    
+    return getPrice(a) - getPrice(b);
+};
+
+$.fn.dataTable.ext.type.order['price-with-na-desc'] = function(a, b) {
+    const getPrice = (data) => {
+        if (typeof data === 'string') {
+            if (data.includes('N/A') || data.includes('unavailable')) {
+                return -Number.MAX_VALUE;
+            }
+            const priceMatch = data.match(/>([\d,]+)€</);
+            if (priceMatch) {
+                return parseFloat(priceMatch[1].replace(',', '.'));
+            }
+        }
+        return -Number.MAX_VALUE;
+    };
+    
+    return getPrice(b) - getPrice(a);
+};
+
 class GasStationApp {
     constructor() {
         this.data = [];
@@ -137,26 +171,13 @@ class GasStationApp {
     }
 
     initializeDataTable() {
-        const totalColumns = 4 + this.activeFuels.length + 1;
+        const totalColumns = 4 + this.activeFuels.length + 1; // 4 basic + fuel columns + horario
         
         const fuelColumnDefs = [];
         for (let i = 4; i < 4 + this.activeFuels.length; i++) {
             fuelColumnDefs.push({
                 targets: i,
-                type: 'num',
-                render: function(data, type, row) {
-                    if (type === 'display') {
-                        return data;
-                    }
-                    if (type === 'sort') {
-                        if (data && data.includes && data.includes('N/A')) {
-                            return 999;
-                        }
-                        const numericValue = parseFloat(String(data).replace('€', '').replace(',', '.'));
-                        return isNaN(numericValue) ? 999 : numericValue;
-                    }
-                    return data;
-                }
+                type: 'price-with-na'
             });
         }
 
