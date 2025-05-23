@@ -348,49 +348,66 @@ class GasStationApp {
     initializeDataTable() {
         const totalColumns = 5 + this.activeFuels.length + 1; 
         
-        const fuelColumnDefs = [];
-        for (let i = 5; i < 5 + this.activeFuels.length; i++) {
-            fuelColumnDefs.push({
-                targets: i,
-                type: 'price-with-na'
-            });
-        }
-
-        fuelColumnDefs.push({
-            targets: 0, 
-            type: 'num',
-            render: function(data, type, row) {
-                if (type === 'sort') {
-                    const match = data.match(/>([\d.]+)(km|m)</);
-                    if (match) {
-                        const value = parseFloat(match[1]);
-                        return match[2] === 'm' ? value / 1000 : value;
-                    }
-                    return 999999;
-                }
-                return data;
-            },
-            responsivePriority: 1
-        });
-        
-        fuelColumnDefs.push(
-            { targets: 1, responsivePriority: 2 }, // Localidad
-            { targets: 2, responsivePriority: 4 }, // Provincia
-            { targets: 3, responsivePriority: 5 }, // Dirección
-            { targets: 4, responsivePriority: 3 }  // Rótulo
-        );
+        const columnClasses = ['distance-column', 'location-column', 'province-column', 'address-column', 'brand-column'];
         
         for (let i = 0; i < this.activeFuels.length; i++) {
-            fuelColumnDefs.push({
-                targets: 5 + i,
-                responsivePriority: i < 2 ? 2 : 4 // First two fuels have higher priority
-            });
+            columnClasses.push('price-column');
         }
         
-        fuelColumnDefs.push({
-            targets: -1,
-            responsivePriority: 2
+        columnClasses.push('schedule-column');
+        
+        const columnDefs = [];
+        columnClasses.forEach((className, index) => {
+            let width;
+            let className2 = className;
+            
+            if (className === 'distance-column') {
+                width = '85px';
+                className2 += ' dt-center';
+            } else if (className === 'price-column' || className === 'schedule-column') {
+                width = '90px';
+                className2 += ' dt-center';
+            } else if (className === 'location-column' || className === 'province-column' || className === 'brand-column') {
+                width = '15%';
+            } else if (className === 'address-column') {
+                width = '25%';
+            }
+            
+            columnDefs.push({
+                targets: index,
+                className: className2,
+                width: width
+            });
         });
+        
+        columnDefs[0].render = function(data, type, row) {
+            if (type === 'sort') {
+                const match = data.match(/>([\d.]+)(km|m)</);
+                if (match) {
+                    const value = parseFloat(match[1]);
+                    return match[2] === 'm' ? value / 1000 : value;
+                }
+                return 999999;
+            }
+            return data;
+        };
+        columnDefs[0].type = 'num';
+        
+        for (let i = 5; i < 5 + this.activeFuels.length; i++) {
+            columnDefs[i].type = 'price-with-na';
+        }
+        
+        columnDefs[0].responsivePriority = 1; // Distance
+        columnDefs[1].responsivePriority = 2; // Location
+        columnDefs[2].responsivePriority = 4; // Province
+        columnDefs[3].responsivePriority = 5; // Address
+        columnDefs[4].responsivePriority = 3; // Brand
+        
+        for (let i = 0; i < this.activeFuels.length; i++) {
+            columnDefs[5 + i].responsivePriority = i < 2 ? 2 : 4;
+        }
+        
+        columnDefs[columnDefs.length - 1].responsivePriority = 2;
 
         const initialOrder = this.userLocation ? [[0, 'asc']] : [[1, 'asc']];
 
@@ -399,6 +416,11 @@ class GasStationApp {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
             },
             pageLength: 25,
+            scrollX: true,
+            autoWidth: false,
+            scrollCollapse: true,
+            fixedHeader: true,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>><"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
             responsive: {
                 details: {
                     type: 'column',
@@ -417,11 +439,35 @@ class GasStationApp {
                             $('<table class="responsive-details"/>').append(data) : 
                             false;
                     }
+                },
+                breakpoints: {
+                    desktop: 1024,
+                    tablet: 768,
+                    phone: 480
                 }
             },
             order: initialOrder,
-            columnDefs: fuelColumnDefs,
-            columns: Array(totalColumns).fill(null)
+            columnDefs: columnDefs,
+            columns: Array(totalColumns).fill(null).map((_, index) => {
+                return { className: columnClasses[index] };
+            })
+        });
+        
+        setTimeout(() => {
+            this.dataTable.columns.adjust();
+            this.dataTable.draw();
+        }, 200);
+        
+        $(window).on('resize', () => {
+            this.dataTable.columns.adjust();
+        });
+        
+        $('a[data-toggle="tab"]').on('shown.bs.tab', () => {
+            this.dataTable.columns.adjust();
+        });
+        
+        this.dataTable.on('draw', () => {
+            this.dataTable.columns.adjust();
         });
     }
 
@@ -631,9 +677,28 @@ class GasStationApp {
         tooltip.innerHTML = content;
         document.body.appendChild(tooltip);
 
+        // Get element position relative to the viewport
         const rect = element.getBoundingClientRect();
-        tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-        tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+        
+        // Calculate initial position (centered above the element)
+        let tooltipTop = rect.top - tooltip.offsetHeight - 10;
+        let tooltipLeft = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+        
+        if (tooltipTop < 10) {
+            tooltipTop = rect.bottom + 10;
+            
+            tooltip.classList.add('tooltip-bottom');
+        }
+        
+        const viewportWidth = window.innerWidth;
+        if (tooltipLeft < 10) {
+            tooltipLeft = 10;
+        } else if (tooltipLeft + tooltip.offsetWidth > viewportWidth - 10) {
+            tooltipLeft = viewportWidth - tooltip.offsetWidth - 10;
+        }
+        
+        tooltip.style.left = `${tooltipLeft}px`;
+        tooltip.style.top = `${tooltipTop}px`;
 
         setTimeout(() => this.hideTooltip(), 3000);
 

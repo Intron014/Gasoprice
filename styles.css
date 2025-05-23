@@ -219,7 +219,7 @@ header p {
 }
 
 .schedule-tooltip {
-    position: absolute;
+    position: fixed;
     background: var(--card-bg);
     color: var(--text-color);
     border: 1px solid var(--border-color);
@@ -233,6 +233,7 @@ header p {
     animation: tooltipFadeIn 0.2s ease;
 }
 
+/* Default tooltip (above the element) */
 .schedule-tooltip::before {
     content: '';
     position: absolute;
@@ -251,6 +252,21 @@ header p {
     transform: translateX(-50%);
     border: 5px solid transparent;
     border-top-color: var(--card-bg);
+}
+
+/* Tooltip below the element */
+.schedule-tooltip.tooltip-bottom::before {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--border-color);
+}
+
+.schedule-tooltip.tooltip-bottom::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--card-bg);
 }
 
 @keyframes tooltipFadeIn {
@@ -502,4 +518,189 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 .dtr-data .schedule-status {
     display: inline-block;
     margin: 2px 0;
+}
+
+/* Table alignment fixes */
+#gas-stations-table {
+    width: 100% !important;
+    margin-bottom: 0;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#gas-stations-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    border-bottom: 2px solid var(--border-color);
+}
+
+#gas-stations-table tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Force table width to 100% */
+.dataTables_scroll, 
+.dataTables_scrollHead, 
+.dataTables_scrollBody,
+.dataTables_scrollFoot {
+    width: 100% !important;
+}
+
+.dataTables_scrollHeadInner {
+    width: 100% !important;
+    padding-right: 0 !important; /* Fix scrollbar issues */
+}
+
+.dataTables_scrollHeadInner table {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Ensure column widths are consistent between header and body */
+.distance-column {
+    width: 85px !important;
+    min-width: 85px !important;
+    max-width: 85px !important;
+}
+
+.price-column, .schedule-column {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+}
+
+/* Improved header-column alignment */
+.dataTables_wrapper {
+    overflow-x: hidden !important;
+    width: 100% !important;
+}
+
+.dataTables_scrollHead,
+.dataTables_scrollBody {
+    overflow: visible !important;
+    width: 100% !important;
+}
+
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table {
+    width: 100% !important;
+    padding-right: 0 !important;
+}
+
+/* Ensure identical structure and sizing */
+#gas-stations-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+#gas-stations-table th,
+#gas-stations-table td {
+    box-sizing: border-box !important;
+    padding: 12px 8px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Force column widths to be identical in header and body */
+#gas-stations-table th.distance-column,
+#gas-stations-table td.distance-column {
+    width: 85px !important;
+    min-width: 85px !important;
+    max-width: 85px !important;
+}
+
+#gas-stations-table th.price-column,
+#gas-stations-table td.price-column,
+#gas-stations-table th.schedule-column,
+#gas-stations-table td.schedule-column {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+}
+
+#gas-stations-table th.location-column,
+#gas-stations-table td.location-column,
+#gas-stations-table th.province-column,
+#gas-stations-table td.province-column {
+    width: 15% !important;
+}
+
+#gas-stations-table th.address-column,
+#gas-stations-table td.address-column {
+    width: 25% !important;
+}
+
+#gas-stations-table th.brand-column,
+#gas-stations-table td.brand-column {
+    width: 15% !important;
+}
+
+/* Override DataTables automatic column sizing */
+table.dataTable {
+    width: 100% !important;
+}
+
+table.dataTable thead th,
+table.dataTable thead td,
+table.dataTable tbody th,
+table.dataTable tbody td {
+    box-sizing: border-box !important;
+}
+
+/* Fix Bootstrap table issues */
+.table>:not(caption)>*>* {
+    padding: 12px 8px !important;
+    box-sizing: border-box !important;
+}
+
+/* Make scrollbar match table width */
+.dataTables_scrollBody::-webkit-scrollbar {
+    height: 8px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: var(--muted-color);
+    border-radius: 4px;
+}
+
+/* Add desktop-specific styles */
+@media (min-width: 1025px) {
+    .table-container {
+        padding: 25px;
+    }
+    
+    #gas-stations-table th, 
+    #gas-stations-table td {
+        padding: 12px 8px;
+    }
+    
+    /* Alternate row colors for better readability */
+    #gas-stations-table tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    [data-theme="dark"] #gas-stations-table tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Proper fixed widths for desktop */
+    .dataTables_scrollHead,
+    .dataTables_scrollBody {
+        width: 100% !important;
+    }
 }
