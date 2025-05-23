@@ -294,8 +294,9 @@ class GasStationApp {
                 if (this.dataTable) {
                     this.dataTable.destroy();
                     this.initializeDataTable();
+                    this.populateDataTable();
+                    his.dataTable.order([0, 'asc']).draw();
                 }
-                this.populateDataTable();
             }
 
         } catch (error) {
@@ -365,13 +366,32 @@ class GasStationApp {
                         const value = parseFloat(match[1]);
                         return match[2] === 'm' ? value / 1000 : value;
                     }
-                    return 999999; 
+                    return 999999;
                 }
                 return data;
-            }
+            },
+            responsivePriority: 1
+        });
+        
+        fuelColumnDefs.push(
+            { targets: 1, responsivePriority: 2 }, // Localidad
+            { targets: 2, responsivePriority: 4 }, // Provincia
+            { targets: 3, responsivePriority: 5 }, // Dirección
+            { targets: 4, responsivePriority: 3 }  // Rótulo
+        );
+        
+        for (let i = 0; i < this.activeFuels.length; i++) {
+            fuelColumnDefs.push({
+                targets: 5 + i,
+                responsivePriority: i < 2 ? 2 : 4 // First two fuels have higher priority
+            });
+        }
+        
+        fuelColumnDefs.push({
+            targets: -1,
+            responsivePriority: 2
         });
 
-        // Determine initial sort order - by distance if available, otherwise by locality
         const initialOrder = this.userLocation ? [[0, 'asc']] : [[1, 'asc']];
 
         this.dataTable = $('#gas-stations-table').DataTable({
@@ -379,7 +399,26 @@ class GasStationApp {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
             },
             pageLength: 25,
-            responsive: true,
+            responsive: {
+                details: {
+                    type: 'column',
+                    target: 'tr',
+                    renderer: function(api, rowIdx, columns) {
+                        const data = $.map(columns, function(col, i) {
+                            return col.hidden ?
+                                '<tr data-dt-row="'+col.rowIndex+'" data-dt-column="'+col.columnIndex+'">'+
+                                    '<td class="responsive-title">'+col.title+':'+'</td> '+
+                                    '<td>'+col.data+'</td>'+
+                            '</tr>' :
+                            '';
+                        }).join('');
+                        
+                        return data ? 
+                            $('<table class="responsive-details"/>').append(data) : 
+                            false;
+                    }
+                }
+            },
             order: initialOrder,
             columnDefs: fuelColumnDefs,
             columns: Array(totalColumns).fill(null)
@@ -637,6 +676,10 @@ class GasStationApp {
         });
         
         this.dataTable.rows.add(rows).draw();
+        
+        if (this.userLocation) {
+            this.dataTable.order([0, 'asc']).draw();
+        }
     }
 
     showLoading() {
