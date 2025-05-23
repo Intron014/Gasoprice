@@ -42,6 +42,8 @@ class GasStationApp {
         this.darkMode = false;
         this.userLocation = null;
         this.locationPermissionRequested = false;
+        this.maxDistance = 4; 
+        this.distanceFilterEnabled = true; 
         this.fuelMapping = {
             'gasolina95': 'Precio Gasolina 95 E5',
             'gasoleo': 'Precio Gasoleo A',
@@ -83,13 +85,34 @@ class GasStationApp {
         this.fuelCheckboxes = document.querySelectorAll('.fuel-filter');
         this.darkModeToggle = document.getElementById('dark-mode-toggle');
         this.locationStatusEl = document.getElementById('location-status');
+        
+        // Add new distance filter elements
+        this.maxDistanceSlider = document.getElementById('max-distance-slider');
+        this.maxDistanceValue = document.getElementById('max-distance-value');
+        this.disableDistanceFilter = document.getElementById('disable-distance-filter');
     }
 
     attachEventListeners() {
         this.provinceFilterEl.addEventListener('change', () => this.filterByProvince());
         this.refreshBtnEl.addEventListener('click', () => this.loadData());
+        
+        this.maxDistanceSlider.addEventListener('input', () => {
+            const value = this.maxDistanceSlider.value;
+            this.maxDistanceValue.textContent = `${value} km`;
+            this.maxDistance = parseInt(value);
+        });
+        
+        this.disableDistanceFilter.addEventListener('change', () => {
+            this.distanceFilterEnabled = !this.disableDistanceFilter.checked;
+            this.maxDistanceSlider.disabled = this.disableDistanceFilter.checked;
+            
+            if (this.dataTable && this.data.length > 0 && this.userLocation) {
+                this.populateDataTable();
+            }
+        });
+        
         this.applyFiltersBtn.addEventListener('click', () => {
-            this.applyFuelFilters();
+            this.applyFilters();
             this.requestCookieConsentIfNeeded();
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
@@ -182,7 +205,6 @@ class GasStationApp {
 
     loadSettings() {
         const consentStatus = localStorage.getItem('cookieconsent_status');
-        console.log('Loading settings, consent status:', consentStatus);
         
         if (consentStatus === 'allow') {
             this.cookieConsent = true;
@@ -210,18 +232,50 @@ class GasStationApp {
                     this.activeFuels = ['gasolina95', 'gasoleo'];
                 }
             }
+            
+            const savedMaxDistance = localStorage.getItem('gasoprice_maxdistance');
+            const savedDistanceEnabled = localStorage.getItem('gasoprice_distancefilter');
+            
+            if (savedMaxDistance) {
+                this.maxDistance = parseInt(savedMaxDistance);
+            } else {
+                this.maxDistance = 4; 
+            }
+            
+            this.maxDistanceSlider.value = this.maxDistance;
+            this.maxDistanceValue.textContent = `${this.maxDistance} km`;
+            
+            if (savedDistanceEnabled) {
+                this.distanceFilterEnabled = savedDistanceEnabled === 'true';
+            } else {
+                this.distanceFilterEnabled = true; 
+            }
+            
+            this.disableDistanceFilter.checked = !this.distanceFilterEnabled;
+            this.maxDistanceSlider.disabled = !this.distanceFilterEnabled;
+        } else {
+            this.maxDistanceSlider.value = 4;
+            this.maxDistanceValue.textContent = "4 km";
+            this.disableDistanceFilter.checked = false;
+            this.maxDistanceSlider.disabled = false;
         }
     }
-
+    
     saveSettings() {
         // Don't rely on localStorage check here, use the instance variable
         if (this.cookieConsent) {
             try {
                 localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
                 localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
+                // Save distance filter settings
+                localStorage.setItem('gasoprice_maxdistance', this.maxDistance.toString());
+                localStorage.setItem('gasoprice_distancefilter', this.distanceFilterEnabled.toString());
+                
                 console.log('Settings saved successfully:', { 
                     darkMode: this.darkMode, 
-                    fuels: this.activeFuels 
+                    fuels: this.activeFuels,
+                    maxDistance: this.maxDistance,
+                    distanceFilterEnabled: this.distanceFilterEnabled
                 });
             } catch (e) {
                 console.error('Error saving settings:', e);
@@ -234,6 +288,8 @@ class GasStationApp {
     clearSettings() {
         localStorage.removeItem('gasoprice_darkmode');
         localStorage.removeItem('gasoprice_fuels');
+        localStorage.removeItem('gasoprice_maxdistance');
+        localStorage.removeItem('gasoprice_distancefilter');
     }
 
     async loadData() {
@@ -290,12 +346,12 @@ class GasStationApp {
             // If data is already loaded, update distances and refresh table
             if (this.data.length > 0) {
                 this.updateDataWithDistances();
-                // Destroy and recreate table to update sorting
+                
                 if (this.dataTable) {
                     this.dataTable.destroy();
                     this.initializeDataTable();
                     this.populateDataTable();
-                    his.dataTable.order([0, 'asc']).draw();
+                    this.dataTable.order([0, 'asc']).draw();
                 }
             }
 
@@ -318,6 +374,40 @@ class GasStationApp {
         }
     }
 
+    applyFilters() {
+        this.applyFuelFilters();
+        
+        if (this.dataTable && this.data.length > 0) {
+            this.populateDataTable();
+        }
+        
+        this.saveSettings();
+    }
+    
+    applyDistanceFilter() {
+        if (!this.dataTable || !this.userLocation) return;
+        
+       $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
+            if (!this.distanceFilterEnabled) return true;
+            
+            const distanceText = data[0];
+            const match = distanceText.match(/>([\d.]+)(km|m)</);
+            
+            if (!match) return true; 
+            
+            const value = parseFloat(match[1]);
+            const unit = match[2];
+            
+            const distanceKm = unit === 'm' ? value / 1000 : value;
+            
+            return distanceKm <= this.maxDistance;
+        });
+        
+        this.dataTable.draw();
+        
+        $.fn.dataTable.ext.search.pop();
+    }
+
     applyFuelFilters() {
         this.activeFuels = [];
         
@@ -326,8 +416,6 @@ class GasStationApp {
                 this.activeFuels.push(checkbox.value);
             }
         });
-        
-        this.saveSettings();
         
         this.updateColumnVisibility();
         this.populateDataTable();
@@ -722,7 +810,17 @@ class GasStationApp {
     populateDataTable() {
         this.dataTable.clear();
         
-        const rows = this.data.map(station => {
+        let filteredData = this.data;
+        if (this.distanceFilterEnabled && this.userLocation) {
+            filteredData = this.data.filter(station => {
+                if (station.distance === null || station.distance === undefined) {
+                    return false;
+                }
+                return station.distance <= this.maxDistance;
+            });
+        }
+        
+        const rows = filteredData.map(station => {
             const row = [
                 this.formatDistance(station.distance),
                 station.Localidad || 'N/A',
@@ -745,6 +843,8 @@ class GasStationApp {
         if (this.userLocation) {
             this.dataTable.order([0, 'asc']).draw();
         }
+        
+        this.updateStats(filteredData.length, this.data.length);
     }
 
     showLoading() {
@@ -784,13 +884,15 @@ class GasStationApp {
     filterByProvince() {
         const selectedProvince = this.provinceFilterEl.value;
         
-        if (selectedProvince) {
-            this.dataTable.column(2).search('^' + selectedProvince + '$', true, false).draw(); // Province is now column 2
-        } else {
-            this.dataTable.column(2).search('').draw();
-        }
+        this.dataTable.column(2).search(selectedProvince ? '^' + selectedProvince + '$' : '', true, false).draw();
         
-        this.updateStats();
+        const visibleCount = this.dataTable.rows({search: 'applied'}).count();
+        
+        if (this.distanceFilterEnabled && this.userLocation) {
+            this.updateStats(visibleCount, this.data.length);
+        } else {
+            this.totalCountEl.textContent = visibleCount;
+        }
     }
 
     formatPrice(price) {
@@ -804,9 +906,12 @@ class GasStationApp {
         this.lastUpdateEl.textContent = `Última actualización: ${fecha || 'Desconocida'}`;
     }
 
-    updateStats() {
-        const filteredCount = this.dataTable ? this.dataTable.rows({search: 'applied'}).count() : 0;
-        this.totalCountEl.textContent = filteredCount;
+    updateStats(filteredCount, totalCount) {
+        if (this.distanceFilterEnabled && this.userLocation && filteredCount !== totalCount) {
+            this.totalCountEl.innerHTML = `${filteredCount} <small class="text-muted">(de ${totalCount} total)</small>`;
+        } else {
+            this.totalCountEl.textContent = totalCount || 0;
+        }
     }
 
     showLocationStatus(message, type) {
