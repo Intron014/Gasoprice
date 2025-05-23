@@ -87,6 +87,12 @@ class GasStationApp {
             const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
             modal.hide();
         });
+        
+        $(document).on('click', '.schedule-status', (e) => {
+            const scheduleElement = e.target;
+            const horario = scheduleElement.getAttribute('data-horario');
+            this.showScheduleDetails(horario, scheduleElement);
+        });
     }
 
     initializeCookieConsent() {
@@ -269,6 +275,186 @@ class GasStationApp {
         `;
     }
 
+    parseSchedule(horario) {
+        if (!horario || horario === 'N/A') {
+            return { status: 'unknown', text: 'Horario no disponible' };
+        }
+
+        // Check for 24H format
+        if (horario.includes('24H') || horario.includes('24:00-24:00')) {
+            return { status: '24h', text: '24/7' };
+        }
+
+        const now = new Date();
+        const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutes since midnight
+
+        // Parse schedule parts separated by semicolon
+        const scheduleparts = horario.split(';').map(part => part.trim());
+        
+        let foundScheduleForToday = false;
+        
+        for (const part of scheduleparts) {
+            const dayTimeMatch = part.match(/([LMXJVSD-]+):\s*(\d{2}:\d{2})-(\d{2}:\d{2})/);
+            if (!dayTimeMatch) continue;
+
+            const [, dayRange, openTime, closeTime] = dayTimeMatch;
+            const daysApplied = this.parseDayRange(dayRange);
+            
+            if (daysApplied.includes(currentDay)) {
+                foundScheduleForToday = true;
+                const openMinutes = this.timeToMinutes(openTime);
+                let closeMinutes = this.timeToMinutes(closeTime);
+                
+                if (closeTime === '00:00') {
+                    closeMinutes = 24 * 60; // End of day
+                }
+                
+                let isOpen;
+                if (closeMinutes > openMinutes) {
+                    isOpen = currentTime >= openMinutes && currentTime < closeMinutes;
+                } else {
+                    isOpen = currentTime >= openMinutes || currentTime < closeMinutes;
+                }
+                
+                return {
+                    status: isOpen ? 'open' : 'closed',
+                    text: isOpen ? `Abierto (${openTime}-${closeTime})` : `Cerrado (${openTime}-${closeTime})`
+                };
+            }
+        }
+
+        if (scheduleparts.length > 0 && !foundScheduleForToday) {
+            return { status: 'closed', text: 'Cerrado hoy' };
+        }
+
+        return { status: 'unknown', text: 'Horario no claro' };
+    }
+
+    parseDayRange(dayRange) {
+        const dayMap = {
+            'L': 1, 'M': 2, 'X': 3, 'J': 4, 'V': 5, 'S': 6, 'D': 0
+        };
+
+        if (dayRange.includes('-')) {
+            const [start, end] = dayRange.split('-');
+            const startDay = dayMap[start];
+            const endDay = dayMap[end];
+            
+            const days = [];
+            if (startDay <= endDay) {
+                for (let i = startDay; i <= endDay; i++) {
+                    days.push(i);
+                }
+            } else {
+                for (let i = startDay; i <= 6; i++) days.push(i);
+                for (let i = 0; i <= endDay; i++) days.push(i);
+            }
+            return days;
+        } else {
+            const singleDays = dayRange.split(',').map(day => day.trim());
+            return singleDays.map(day => dayMap[day]).filter(day => day !== undefined);
+        }
+    }
+
+    timeToMinutes(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    formatScheduleStatus(horario) {
+        const schedule = this.parseSchedule(horario);
+        
+        switch (schedule.status) {
+            case '24h':
+                return `<span class="schedule-status schedule-24h" data-horario="${horario}" title="Ver horarios">24/7</span>`;
+            case 'open':
+                return `<span class="schedule-status schedule-open" data-horario="${horario}" title="Ver horarios">Abierto</span>`;
+            case 'closed':
+                return `<span class="schedule-status schedule-closed" data-horario="${horario}" title="Ver horarios">Cerrado</span>`;
+            default:
+                return `<span class="schedule-status schedule-unknown" data-horario="${horario}" title="Ver horarios">N/A</span>`;
+        }
+    }
+
+    showScheduleDetails(horario, element) {
+        // Log the original horario for debugging
+        console.log('Original horario from JSON:', horario);
+        
+        if (!horario || horario === 'N/A') {
+            this.showTooltip('Horario no disponible', element);
+            return;
+        }
+
+        const formattedSchedule = this.formatScheduleForDisplay(horario);
+        this.showTooltip(formattedSchedule, element);
+    }
+
+    formatScheduleForDisplay(horario) {
+        if (horario.includes('24H')) {
+            return 'Abierto las 24 horas, todos los días';
+        }
+
+        const dayNames = {
+            'L': 'Lunes', 'M': 'Martes', 'X': 'Miércoles', 
+            'J': 'Jueves', 'V': 'Viernes', 'S': 'Sábado', 'D': 'Domingo'
+        };
+
+        const scheduleparts = horario.split(';').map(part => part.trim());
+        let formatted = '';
+
+        scheduleparts.forEach(part => {
+            const dayTimeMatch = part.match(/([LMXJVSD-]+):\s*(\d{2}:\d{2})-(\d{2}:\d{2})/);
+            if (dayTimeMatch) {
+                const [, dayRange, openTime, closeTime] = dayTimeMatch;
+                const formattedDays = this.formatDayRange(dayRange, dayNames);
+                formatted += `${formattedDays}: ${openTime} - ${closeTime}<br>`;
+            }
+        });
+
+        return formatted || 'Horario no disponible';
+    }
+
+    formatDayRange(dayRange, dayNames) {
+        if (dayRange.includes('-')) {
+            const [start, end] = dayRange.split('-');
+            return `${dayNames[start]} a ${dayNames[end]}`;
+        } else {
+            return dayRange.split(',').map(day => dayNames[day.trim()]).join(', ');
+        }
+    }
+
+    showTooltip(content, element) {
+        this.hideTooltip();
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'schedule-tooltip';
+        tooltip.innerHTML = content;
+        document.body.appendChild(tooltip);
+
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+        tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+
+        setTimeout(() => this.hideTooltip(), 3000);
+
+        document.addEventListener('click', this.hideTooltipHandler);
+    }
+
+    hideTooltip() {
+        const tooltip = document.querySelector('.schedule-tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+        document.removeEventListener('click', this.hideTooltipHandler);
+    }
+
+    hideTooltipHandler = (e) => {
+        if (!e.target.closest('.schedule-tooltip') && !e.target.closest('.schedule-status')) {
+            this.hideTooltip();
+        }
+    }
+
     populateDataTable() {
         this.dataTable.clear();
         
@@ -285,7 +471,7 @@ class GasStationApp {
                 row.push(this.formatPrice(station[priceField]));
             });
             
-            row.push(station.Horario || 'N/A');
+            row.push(this.formatScheduleStatus(station.Horario));
             return row;
         });
         

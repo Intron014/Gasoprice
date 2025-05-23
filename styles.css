@@ -166,6 +166,108 @@ header p {
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+.schedule-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.schedule-status:hover {
+    opacity: 0.8;
+}
+
+.schedule-24h {
+    background-color: #28a745;
+    color: white;
+}
+
+.schedule-open {
+    background-color: #28a745;
+    color: white;
+}
+
+.schedule-closed {
+    background-color: #dc3545;
+    color: white;
+}
+
+.schedule-unknown {
+    background-color: #6c757d;
+    color: white;
+}
+
+[data-theme="dark"] .schedule-24h {
+    background-color: #198754;
+}
+
+[data-theme="dark"] .schedule-open {
+    background-color: #198754;
+}
+
+[data-theme="dark"] .schedule-closed {
+    background-color: #dc3545;
+}
+
+[data-theme="dark"] .schedule-unknown {
+    background-color: #495057;
+}
+
+.schedule-tooltip {
+    position: absolute;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-width: 250px;
+    animation: tooltipFadeIn 0.2s ease;
+}
+
+.schedule-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border-color);
+}
+
+.schedule-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--card-bg);
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-theme="dark"] .schedule-tooltip {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
 /* Dark mode specific overrides */
 [data-theme="dark"] .table {
     --bs-table-bg: var(--card-bg);
