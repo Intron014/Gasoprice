@@ -4,6 +4,8 @@ class GasStationApp {
         this.dataTable = null;
         this.apiUrl = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
         this.activeFuels = ['gasolina95', 'gasoleo']; // Default visible fuels
+        this.cookieConsent = false;
+        this.darkMode = false;
         this.fuelMapping = {
             'gasolina95': 'Precio Gasolina 95 E5',
             'gasoleo': 'Precio Gasoleo A',
@@ -15,6 +17,8 @@ class GasStationApp {
         };
         
         this.initializeElements();
+        this.initializeCookieConsent();
+        this.loadSettings();
         this.attachEventListeners();
         this.initializeDataTable();
         this.loadData();
@@ -29,25 +33,112 @@ class GasStationApp {
         this.totalCountEl = document.getElementById('total-count');
         this.applyFiltersBtn = document.getElementById('apply-filters');
         this.fuelCheckboxes = document.querySelectorAll('.fuel-filter');
+        this.darkModeToggle = document.getElementById('dark-mode-toggle');
     }
 
     attachEventListeners() {
         this.provinceFilterEl.addEventListener('change', () => this.filterByProvince());
         this.refreshBtnEl.addEventListener('click', () => this.loadData());
-        this.applyFiltersBtn.addEventListener('click', () => this.applyFuelFilters());
+        this.applyFiltersBtn.addEventListener('click', () => {
+            this.applyFuelFilters();
+            this.requestCookieConsentIfNeeded();
+        });
         
-        // Close modal after applying filters
+        this.darkModeToggle.addEventListener('click', () => {
+            this.toggleDarkMode();
+            this.requestCookieConsentIfNeeded();
+        });
+
         this.applyFiltersBtn.addEventListener('click', () => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
             modal.hide();
         });
     }
 
+    initializeCookieConsent() {
+        this.cookieConsentInstance = window.cookieconsent.initialise({
+            palette: {
+                popup: {
+                    background: "#1d8a8a"
+                },
+                button: {
+                    background: "#62ffaa"
+                }
+            },
+            theme: "classic",
+            position: "bottom-right",
+            content: {
+                message: "Este sitio utiliza cookies para recordar tus preferencias de filtros y modo oscuro.",
+                dismiss: "Entendido",
+                deny: "Rechazar",
+                allow: "Permitir cookies",
+                link: "Más información"
+            },
+            type: "opt-in",
+            onStatusChange: (status) => {
+                this.cookieConsent = status === 'allow';
+                if (this.cookieConsent) {
+                    this.saveSettings();
+                } else {
+                    this.clearSettings();
+                }
+            }
+        });
+    }
+
+    requestCookieConsentIfNeeded() {
+        const consentStatus = localStorage.getItem('cookieconsent_status');
+        if (!consentStatus) {
+            this.initializeCookieConsent();
+        } else if (consentStatus === 'allow') {
+            this.cookieConsent = true;
+            this.saveSettings();
+        }
+    }
+
+    toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+        document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+        this.darkModeToggle.textContent = this.darkMode ? '☀️' : '🌙';
+    }
+
+    loadSettings() {
+        if (localStorage.getItem('cookieconsent_status') === 'allow') {
+            this.cookieConsent = true;
+            
+            // Load dark mode setting
+            const savedDarkMode = localStorage.getItem('gasoprice_darkmode');
+            if (savedDarkMode === 'true') {
+                this.darkMode = true;
+                document.documentElement.setAttribute('data-theme', 'dark');
+                this.darkModeToggle.textContent = '☀️';
+            }
+
+            const savedFuels = localStorage.getItem('gasoprice_fuels');
+            if (savedFuels) {
+                this.activeFuels = JSON.parse(savedFuels);
+                this.fuelCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.activeFuels.includes(checkbox.value);
+                });
+            }
+        }
+    }
+
+    saveSettings() {
+        if (this.cookieConsent) {
+            localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
+            localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
+        }
+    }
+
+    clearSettings() {
+        localStorage.removeItem('gasoprice_darkmode');
+        localStorage.removeItem('gasoprice_fuels');
+    }
+
     initializeDataTable() {
-        // Calculate number of columns dynamically
-        const totalColumns = 4 + this.activeFuels.length + 1; // 4 basic + fuel columns + horario
+        const totalColumns = 4 + this.activeFuels.length + 1;
         
-        // Create column definitions for fuel columns only
         const fuelColumnDefs = [];
         for (let i = 4; i < 4 + this.activeFuels.length; i++) {
             fuelColumnDefs.push({

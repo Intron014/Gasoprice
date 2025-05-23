@@ -4,11 +4,28 @@
     box-sizing: border-box;
 }
 
+:root {
+    --bg-color: #f8f9fa;
+    --text-color: #333;
+    --card-bg: white;
+    --border-color: #e9ecef;
+    --muted-color: #6c757d;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --border-color: #333;
+    --muted-color: #b0b0b0;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     line-height: 1.5;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -20,28 +37,36 @@ body {
 header {
     text-align: center;
     margin-bottom: 30px;
-    background: white;
+    background: var(--card-bg);
     padding: 30px;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
+    position: relative;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.header-controls {
+    position: absolute;
+    top: 15px;
+    right: 15px;
 }
 
 header h1 {
     font-size: 2.5rem;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #212529;
+    color: var(--text-color);
 }
 
 header p {
     font-size: 1.1rem;
-    color: #6c757d;
+    color: var(--muted-color);
     margin-bottom: 8px;
 }
 
 #last-update {
     font-size: 0.9rem;
-    color: #868e96;
+    color: var(--muted-color);
     margin-bottom: 0;
 }
 
@@ -64,9 +89,10 @@ header p {
 .loading {
     text-align: center;
     padding: 50px;
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .spinner {
@@ -95,11 +121,12 @@ header p {
 }
 
 .table-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     margin-bottom: 20px;
     padding: 20px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dataTables_wrapper .dataTables_length,
@@ -130,12 +157,47 @@ header p {
 
 .stats {
     text-align: center;
-    color: #6c757d;
+    color: var(--muted-color);
     font-size: 14px;
     padding: 15px;
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode specific overrides */
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--card-bg);
+    --bs-table-color: var(--text-color);
+}
+
+[data-theme="dark"] .table-dark {
+    --bs-table-bg: #2d2d2d;
+    --bs-table-color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
 }
 
 @media (max-width: 768px) {
