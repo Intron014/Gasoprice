@@ -160,7 +160,8 @@ class GasStationApp {
     }
 
     loadSettings() {
-        if (localStorage.getItem('cookieconsent_status') === 'allow') {
+        const consentStatus = localStorage.getItem('cookieconsent_status');
+        if (consentStatus === 'allow') {
             this.cookieConsent = true;
             
             // Load dark mode setting
@@ -173,18 +174,26 @@ class GasStationApp {
 
             const savedFuels = localStorage.getItem('gasoprice_fuels');
             if (savedFuels) {
-                this.activeFuels = JSON.parse(savedFuels);
-                this.fuelCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.activeFuels.includes(checkbox.value);
-                });
+                try {
+                    this.activeFuels = JSON.parse(savedFuels);
+                    this.fuelCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.activeFuels.includes(checkbox.value);
+                    });
+                } catch (e) {
+                    console.error('Error parsing saved fuels:', e);
+                    this.activeFuels = ['gasolina95', 'gasoleo'];
+                }
             }
         }
     }
 
     saveSettings() {
-        if (this.cookieConsent) {
+        const consentStatus = localStorage.getItem('cookieconsent_status');
+        if (consentStatus === 'allow') {
+            this.cookieConsent = true;
             localStorage.setItem('gasoprice_darkmode', this.darkMode.toString());
             localStorage.setItem('gasoprice_fuels', JSON.stringify(this.activeFuels));
+            console.log('Settings saved:', { darkMode: this.darkMode, fuels: this.activeFuels });
         }
     }
 
@@ -244,9 +253,14 @@ class GasStationApp {
 
             this.showLocationStatus(`Ubicación obtenida (±${Math.round(position.coords.accuracy)}m)`, 'success');
             
-            // If data is already loaded, update the table
+            // If data is already loaded, update distances and refresh table
             if (this.data.length > 0) {
                 this.updateDataWithDistances();
+                // Destroy and recreate table to update sorting
+                if (this.dataTable) {
+                    this.dataTable.destroy();
+                    this.initializeDataTable();
+                }
                 this.populateDataTable();
             }
 
@@ -323,13 +337,16 @@ class GasStationApp {
             }
         });
 
+        // Determine initial sort order - by distance if available, otherwise by locality
+        const initialOrder = this.userLocation ? [[0, 'asc']] : [[1, 'asc']];
+
         this.dataTable = $('#gas-stations-table').DataTable({
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
             },
             pageLength: 25,
             responsive: true,
-            order: this.userLocation ? [[0, 'asc']] : [[1, 'asc']], // Sort by distance if available, otherwise by city
+            order: initialOrder,
             columnDefs: fuelColumnDefs,
             columns: Array(totalColumns).fill(null)
         });
