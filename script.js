@@ -37,9 +37,11 @@ class GasStationApp {
         this.data = [];
         this.dataTable = null;
         this.apiUrl = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
-        this.activeFuels = ['gasolina95', 'gasoleo']; // Default visible fuels
+        this.activeFuels = ['gasolina95', 'gasoleo'];
         this.cookieConsent = false;
         this.darkMode = false;
+        this.userLocation = null;
+        this.locationPermissionRequested = false;
         this.fuelMapping = {
             'gasolina95': 'Precio Gasolina 95 E5',
             'gasoleo': 'Precio Gasoleo A',
@@ -63,6 +65,7 @@ class GasStationApp {
         this.initializeCookieConsent();
         this.loadSettings();
         this.attachEventListeners();
+        this.requestUserLocation();
         this.initializeDataTable();
         this.loadData();
     }
@@ -77,6 +80,7 @@ class GasStationApp {
         this.applyFiltersBtn = document.getElementById('apply-filters');
         this.fuelCheckboxes = document.querySelectorAll('.fuel-filter');
         this.darkModeToggle = document.getElementById('dark-mode-toggle');
+        this.locationStatusEl = document.getElementById('location-status');
     }
 
     attachEventListeners() {
@@ -185,29 +189,6 @@ class GasStationApp {
         localStorage.removeItem('gasoprice_fuels');
     }
 
-    initializeDataTable() {
-        const totalColumns = 4 + this.activeFuels.length + 1; // 4 basic + fuel columns + horario
-        
-        const fuelColumnDefs = [];
-        for (let i = 4; i < 4 + this.activeFuels.length; i++) {
-            fuelColumnDefs.push({
-                targets: i,
-                type: 'price-with-na'
-            });
-        }
-
-        this.dataTable = $('#gas-stations-table').DataTable({
-            language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
-            },
-            pageLength: 25,
-            responsive: true,
-            order: [[0, 'asc']],
-            columnDefs: fuelColumnDefs,
-            columns: Array(totalColumns).fill(null) // Ensure column count matches
-        });
-    }
-
     async loadData() {
         this.showLoading();
         
@@ -226,14 +207,62 @@ class GasStationApp {
         }
     }
 
-    processData(data) {
-        this.data = data.ListaEESSPrecio || [];
-        
-        this.updateLastUpdate(data.Fecha);
-        this.populateProvinceFilter();
-        this.updateColumnVisibility(); // This will rebuild table with correct columns
-        this.updateStats();
-        this.hideLoading();
+    async requestUserLocation() {
+        if (!navigator.geolocation) {
+            this.showLocationStatus('Geolocalización no disponible en este navegador', 'error');
+            return;
+        }
+
+        if (this.locationPermissionRequested) {
+            return;
+        }
+
+        this.locationPermissionRequested = true;
+        this.showLocationStatus('Solicitando ubicación...', 'loading');
+
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000 // 5 minutes
+                    }
+                );
+            });
+
+            this.userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            this.showLocationStatus(`Ubicación obtenida (±${Math.round(position.coords.accuracy)}m)`, 'success');
+            
+            // If data is already loaded, update the table
+            if (this.data.length > 0) {
+                this.updateDataWithDistances();
+                this.populateDataTable();
+            }
+
+        } catch (error) {
+            let message = 'No se pudo obtener la ubicación';
+            
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'Ubicación denegada por el usuario';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Ubicación no disponible';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Tiempo de espera agotado para obtener ubicación';
+                    break;
+            }
+            
+            this.showLocationStatus(message, 'error');
+        }
     }
 
     applyFuelFilters() {
@@ -261,9 +290,60 @@ class GasStationApp {
         }
     }
 
+    initializeDataTable() {
+        const totalColumns = 5 + this.activeFuels.length + 1; 
+        
+        const fuelColumnDefs = [];
+        for (let i = 5; i < 5 + this.activeFuels.length; i++) {
+            fuelColumnDefs.push({
+                targets: i,
+                type: 'price-with-na'
+            });
+        }
+
+        fuelColumnDefs.push({
+            targets: 0, 
+            type: 'num',
+            render: function(data, type, row) {
+                if (type === 'sort') {
+                    const match = data.match(/>([\d.]+)(km|m)</);
+                    if (match) {
+                        const value = parseFloat(match[1]);
+                        return match[2] === 'm' ? value / 1000 : value;
+                    }
+                    return 999999; 
+                }
+                return data;
+            }
+        });
+
+        this.dataTable = $('#gas-stations-table').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            responsive: true,
+            order: this.userLocation ? [[0, 'asc']] : [[1, 'asc']], // Sort by distance if available, otherwise by city
+            columnDefs: fuelColumnDefs,
+            columns: Array(totalColumns).fill(null)
+        });
+    }
+
+    processData(data) {
+        this.data = data.ListaEESSPrecio || [];
+        
+        this.updateLastUpdate(data.Fecha);
+        this.updateDataWithDistances();
+        this.populateProvinceFilter();
+        this.updateColumnVisibility();
+        this.updateStats();
+        this.hideLoading();
+    }
+
     updateTableHeader() {
         const thead = document.querySelector('#gas-stations-table thead tr');
         thead.innerHTML = `
+            <th>Distancia</th>
             <th>Localidad</th>
             <th>Provincia</th>
             <th>Dirección</th>
@@ -478,6 +558,7 @@ class GasStationApp {
         
         const rows = this.data.map(station => {
             const row = [
+                this.formatDistance(station.distance),
                 station.Localidad || 'N/A',
                 station.Provincia || 'N/A',
                 station.Dirección || 'N/A',
@@ -534,9 +615,9 @@ class GasStationApp {
         const selectedProvince = this.provinceFilterEl.value;
         
         if (selectedProvince) {
-            this.dataTable.column(1).search('^' + selectedProvince + '$', true, false).draw();
+            this.dataTable.column(2).search('^' + selectedProvince + '$', true, false).draw(); // Province is now column 2
         } else {
-            this.dataTable.column(1).search('').draw();
+            this.dataTable.column(2).search('').draw();
         }
         
         this.updateStats();
@@ -556,6 +637,92 @@ class GasStationApp {
     updateStats() {
         const filteredCount = this.dataTable ? this.dataTable.rows({search: 'applied'}).count() : 0;
         this.totalCountEl.textContent = filteredCount;
+    }
+
+    showLocationStatus(message, type) {
+        this.locationStatusEl.textContent = message;
+        this.locationStatusEl.style.display = 'block';
+        
+        // Remove existing type classes
+        this.locationStatusEl.classList.remove('text-success', 'text-warning', 'text-danger');
+        
+        switch (type) {
+            case 'success':
+                this.locationStatusEl.classList.add('text-success');
+                break;
+            case 'error':
+                this.locationStatusEl.classList.add('text-danger');
+                break;
+            case 'loading':
+                this.locationStatusEl.classList.add('text-warning');
+                break;
+        }
+
+        if (type === 'success' || type === 'loading') {
+            setTimeout(() => {
+                this.locationStatusEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    calculateDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371; 
+        const dLat = this.toRad(lat2 - lat1);
+        const dLng = this.toRad(lng2 - lng1);
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+                  Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    toRad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    updateDataWithDistances() {
+        if (!this.userLocation) return;
+
+        this.data.forEach(station => {
+            if (station.Latitud && station['Longitud (WGS84)']) {
+                const lat = parseFloat(station.Latitud.replace(',', '.'));
+                const lng = parseFloat(station['Longitud (WGS84)'].replace(',', '.'));
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    station.distance = this.calculateDistance(
+                        this.userLocation.lat,
+                        this.userLocation.lng,
+                        lat,
+                        lng
+                    );
+                } else {
+                    station.distance = null;
+                }
+            } else {
+                station.distance = null;
+            }
+        });
+
+        if (this.userLocation) {
+            this.data.sort((a, b) => {
+                if (a.distance === null && b.distance === null) return 0;
+                if (a.distance === null) return 1;
+                if (b.distance === null) return -1;
+                return a.distance - b.distance;
+            });
+        }
+    }
+
+    formatDistance(distance) {
+        if (distance === null || distance === undefined) {
+            return '<span class="distance unavailable">N/A</span>';
+        }
+        
+        if (distance < 1) {
+            return `<span class="distance">${Math.round(distance * 1000)}m</span>`;
+        } else {
+            return `<span class="distance">${distance.toFixed(1)}km</span>`;
+        }
     }
 }
 
