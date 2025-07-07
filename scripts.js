@@ -154,7 +154,6 @@ function showMapEmbed(event, station) {
     const iframe = document.createElement('iframe');
     iframe.width = '300';
     iframe.height = '200';
-    iframe.frameBorder = '0';
     iframe.style.border = '0';
     iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`;
 
@@ -498,6 +497,10 @@ async function fetchStations() {
         
         const data = await response.json();
         allStations = data.ListaEESSPrecio || data;
+        // Show update date at the bottom if available
+        if (data.Fecha) {
+            update_date(data.Fecha);
+        }
         hideSpinner();
         return allStations;
     } catch (error) {
@@ -1072,7 +1075,17 @@ function initializeLocationFilters() {
 
 
 function update_date(date) {
-    document.getElementById('update-date').textContent = "Latest update:\n" + date;
+    let updateDateElem = document.getElementById('update-date');
+    if (!updateDateElem) {
+        updateDateElem = document.createElement('div');
+        updateDateElem.id = 'update-date';
+        updateDateElem.style.textAlign = 'center';
+        updateDateElem.style.margin = '30px 0 10px 0';
+        updateDateElem.style.fontSize = '0.95em';
+        updateDateElem.style.color = '#888';
+        document.body.appendChild(updateDateElem);
+    }
+    updateDateElem.textContent = translate('latestUpdate') + ' ' + date;
 }
 
 window.onload = async function() {

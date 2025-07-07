@@ -54,6 +54,11 @@
     "es": "Última actualización:",
     "ca": "Última actualització:"
   },
+  "updateFrequencyTooltip": {
+    "en": "The service updates every 30 minutes.",
+    "es": "El servicio se actualiza cada 30 minutos.",
+    "ca": "El servei s'actualitza cada 30 minuts."
+  },
   "C.P.": {
     "en": "P.C.",
     "es": "C.P.",
