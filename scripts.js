@@ -468,14 +468,22 @@ async function fetchStations() {
     showSpinner();
     const urlParams = new URLSearchParams(window.location.search);
     const useMock = urlParams.get('mock') === 'true';
-    const fetchUrl = useMock ? 'stuff/mock.json' : 'https://api.gasoprice.com/stations';
+    const primaryUrl = 'https://api.gasoprice.com/stations';
+    const fallbackUrl = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
 
     try {
         if (useMock) {
             console.log('Using mock data');
         }
         
-        const response = await fetch(fetchUrl);
+        let response;
+        try {
+            console.log('Trying primary API endpoint...');
+            response = await fetch(primaryUrl);
+        } catch (primaryError) {
+            console.warn('Primary API failed, trying fallback:', primaryError);
+            response = await fetch(fallbackUrl);
+        }
         
         // Check for maintenance redirect in the response URL
         if (response.url && response.url.includes('enmantenimiento')) {
@@ -489,7 +497,7 @@ async function fetchStations() {
         }
         
         const data = await response.json();
-        allStations = data.ListaEESSPrecio;
+        allStations = data.ListaEESSPrecio || data;
         hideSpinner();
         return allStations;
     } catch (error) {
