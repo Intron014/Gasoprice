@@ -468,7 +468,7 @@ async function fetchStations() {
     showSpinner();
     const urlParams = new URLSearchParams(window.location.search);
     const useMock = urlParams.get('mock') === 'true';
-    const fetchUrl = useMock ? 'stuff/mock.json' : 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
+    const fetchUrl = useMock ? 'stuff/mock.json' : 'https://api.gasoprice.com/stations';
 
     try {
         if (useMock) {
